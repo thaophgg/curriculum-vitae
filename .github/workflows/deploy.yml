@@ -1,0 +1,84 @@
+# Tên của workflow này
+name: Deploy to server
+
+# Kích hoạt workflow khi nào
+on:
+  push: # Khi có push code
+    branches: [ main ] # Vào nhánh main
+  # pull_request: # Khi có pull request
+  #   branches: [ main, master ] # Vào nhánh main hoặc master
+
+# Các công việc cần thực hiện
+jobs:
+  # Job 1: Build và test
+  build-and-test:
+    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu mới nhất
+    
+    steps: # Các bước thực hiện
+    - name: Checkout code # Tải code từ repository về runner của github (ubuntu lastest)
+      uses: actions/checkout@v4 # Sử dụng action checkout phiên bản 4
+      
+    - name: Setup Node.js # Cài đặt Node.js
+      uses: actions/setup-node@v4 # Sử dụng action setup-node phiên bản 4
+      with:
+        node-version: '20' # Sử dụng Node.js phiên bản 20
+        cache: 'npm' # Cache npm để cài đặt nhanh hơn
+        
+    - name: Install dependencies # Cài đặt các thư viện phụ thuộc
+      run: npm ci # Chạy lệnh npm ci (giống npm install nhưng sạch hơn)
+      
+    - name: Run linter # Kiểm tra code theo chuẩn
+      run: npm run lint # Chạy lệnh lint
+      
+    - name: Build project # Build dự án
+      run: npm run build # Chạy lệnh build
+      
+    - name: Upload build artifacts # Tải file build lên để dùng cho job sau
+      uses: actions/upload-artifact@v4 # Sử dụng action upload-artifact
+      with:
+        name: dist # Tên của artifact
+        path: dist/ # Đường dẫn thư mục dist
+        retention-days: 7 # Giữ artifact trong 7 ngày
+
+  # Job 2: Deploy lên GitHub Pages
+  deploy:
+    needs: build-and-test # Job này chỉ chạy khi build-and-test thành công
+    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu mới nhất
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' # Chỉ chạy khi push vào main hoặc master
+    
+    permissions: # Các quyền cần thiết
+      contents: read # Quyền đọc nội dung
+      pages: write # Quyền ghi lên Pages
+      id-token: write # Quyền ghi token
+      
+    environment: # Cấu hình môi trường
+      name: github-pages # Tên môi trường
+      url: ${{ steps.deployment.outputs.page_url }} # URL sau khi deploy
+      
+    steps: # Các bước thực hiện
+    - name: Checkout code # Tải code từ repository về
+      uses: actions/checkout@v4 # Sử dụng action checkout phiên bản 4
+      
+    - name: Setup Node.js # Cài đặt Node.js
+      uses: actions/setup-node@v4 # Sử dụng action setup-node phiên bản 4
+      with:
+        node-version: '20' # Sử dụng Node.js phiên bản 20
+        cache: 'npm' # Cache npm để cài đặt nhanh hơn
+        
+    - name: Install dependencies # Cài đặt các thư viện phụ thuộc
+      run: npm ci # Chạy lệnh npm ci
+      
+    - name: Build project # Build dự án
+      run: npm run build # Chạy lệnh build
+      
+    - name: Setup Pages # Cấu hình GitHub Pages
+      uses: actions/configure-pages@v4 # Sử dụng action configure-pages
+      
+    - name: Upload artifact # Tải artifact lên để deploy
+      uses: actions/upload-pages-artifact@v3 # Sử dụng action upload-pages-artifact
+      with:
+        path: './dist' # Đường dẫn thư mục dist cần deploy
+        
+    - name: Deploy to GitHub Pages # Deploy lên GitHub Pages
+      id: deployment # ID của bước này để lấy output
+      uses: actions/deploy-pages@v4 # Sử dụng action deploy-pages

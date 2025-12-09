@@ -1,17 +1,6 @@
 import React from 'react'
 
 const Loading = () => {
-  const shimmerKeyframes = `
-    @keyframes shimmer {
-      0% {
-        background-position: -468px 0;
-      }
-      100% {
-        background-position: 468px 0;
-      }
-    }
-  `;
-
   return (
     <div className="max-w-6xl mx-auto bg-white shadow-2xl overflow-hidden my-8 animate-pulse">
     <div className="grid grid-cols-1 lg:grid-cols-12">
