@@ -33,7 +33,7 @@ const ConfigForm = (props: ConfigFormProps) => {
       navigate(`/my-cv/${value}/${templateId}`);
       return
     }
-  }, [location, templateId]);
+  }, [location, templateId, navigate]);
 
   return (
     <div className={`flex justify-end items-center gap-3 ${className}`}>
