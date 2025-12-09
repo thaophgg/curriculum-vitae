@@ -16,10 +16,5 @@
 }
 
 @theme {
-  --color-primary: #929D7F;
-  --color-primary-100: #939e801a;
-  --color-primary-200: #939d8033;
-  --color-primary-300: #939d804d;
-  --color-primary-400: #939d8066;
-  --color-primary-500: #939d8080;
+  --color-primary: pink;
 }
