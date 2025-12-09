@@ -1,84 +1,60 @@
-# Tên của workflow này
-name: Deploy to server
+name: Deploy to Server
 
-# Kích hoạt workflow khi nào
 on:
-  push: # Khi có push code
-    branches: [ main ] # Vào nhánh main
-  # pull_request: # Khi có pull request
-  #   branches: [ main, master ] # Vào nhánh main hoặc master
+  push:
+    branches: [ main ]        # push lên main thì deploy
+  workflow_dispatch:          # cho phép chạy tay từ tab Actions
 
-# Các công việc cần thực hiện
 jobs:
-  # Job 1: Build và test
-  build-and-test:
-    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu mới nhất
-    
-    steps: # Các bước thực hiện
-    - name: Checkout code # Tải code từ repository về runner của github (ubuntu lastest)
-      uses: actions/checkout@v4 # Sử dụng action checkout phiên bản 4
-      
-    - name: Setup Node.js # Cài đặt Node.js
-      uses: actions/setup-node@v4 # Sử dụng action setup-node phiên bản 4
-      with:
-        node-version: '20' # Sử dụng Node.js phiên bản 20
-        cache: 'npm' # Cache npm để cài đặt nhanh hơn
-        
-    - name: Install dependencies # Cài đặt các thư viện phụ thuộc
-      run: npm ci # Chạy lệnh npm ci (giống npm install nhưng sạch hơn)
-      
-    - name: Run linter # Kiểm tra code theo chuẩn
-      run: npm run lint # Chạy lệnh lint
-      
-    - name: Build project # Build dự án
-      run: npm run build # Chạy lệnh build
-      
-    # - name: Upload build artifacts # Tải file build lên để dùng cho job sau
-    #   uses: actions/upload-artifact@v4 # Sử dụng action upload-artifact
-    #   with:
-    #     name: dist # Tên của artifact
-    #     path: dist/ # Đường dẫn thư mục dist
-    #     retention-days: 7 # Giữ artifact trong 7 ngày
-
-  # Job 2: Deploy lên GitHub Pages
   deploy:
-    needs: build-and-test # Job này chỉ chạy khi build-and-test thành công
-    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu mới nhất
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' # Chỉ chạy khi push vào main hoặc master
-    
-    permissions: # Các quyền cần thiết
-      contents: read # Quyền đọc nội dung
-      pages: write # Quyền ghi lên Pages
-      id-token: write # Quyền ghi token
-      
-    environment: # Cấu hình môi trường
-      name: github-pages # Tên môi trường
-      url: ${{ steps.deployment.outputs.page_url }} # URL sau khi deploy
-      
-    steps: # Các bước thực hiện
-    - name: Checkout code # Tải code từ repository về
-      uses: actions/checkout@v4 # Sử dụng action checkout phiên bản 4
-      
-    - name: Setup Node.js # Cài đặt Node.js
-      uses: actions/setup-node@v4 # Sử dụng action setup-node phiên bản 4
-      with:
-        node-version: '20' # Sử dụng Node.js phiên bản 20
-        cache: 'npm' # Cache npm để cài đặt nhanh hơn
-        
-    - name: Install dependencies # Cài đặt các thư viện phụ thuộc
-      run: npm ci # Chạy lệnh npm ci
-      
-    - name: Build project # Build dự án
-      run: npm run build # Chạy lệnh build
-      
-    - name: Setup Pages # Cấu hình GitHub Pages
-      uses: actions/configure-pages@v4 # Sử dụng action configure-pages
-      
-    - name: Upload artifact # Tải artifact lên để deploy
-      uses: actions/upload-pages-artifact@v3 # Sử dụng action upload-pages-artifact
-      with:
-        path: './dist' # Đường dẫn thư mục dist cần deploy
-        
-    - name: Deploy to GitHub Pages # Deploy lên GitHub Pages
-      id: deployment # ID của bước này để lấy output
-      uses: actions/deploy-pages@v4 # Sử dụng action deploy-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Lấy code từ repo, câu lệnh của github action
+
+      - name: Build
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_AWS_SSH_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          REMOTE_DIR: /home/ubuntu/my-cv  # Thay đổi đường dẫn này theo server của bạn
+        run: |
+          echo "Bắt đầu deploy lên $SSH_HOST ..."
+          echo "SSH Host: $SSH_HOST"
+          echo "SSH Username: $SSH_USERNAME"
+          echo "SSH Port: $SSH_PORT"
+          echo "Remote Directory: $REMOTE_DIR"
+          
+          npm install
+          npm run build 
+
+          echo "Deploy thành công lên https://$SSH_HOST"
+
+      - name: Copy files to server via SSH (rsync)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}          # ví dụ: 123.45.67.89 hoặc tippibui.com
+          username: ${{ secrets.SSH_USERNAME }}  # thường là: root hoặc deploy
+          key: ${{ secrets.SERVER_AWS_SSH_KEY }}    # private key của user trên server
+          port: ${{ secrets.SSH_PORT || '22' }}
+          source: "./dist"                          # copy toàn bộ (trừ .git)
+          target: ${{REMOTE_DIR}}     # đường dẫn đích trên server
+          strip_components: 0
+          overwrite: true
+          rm: true                               # xóa file cũ trên server nếu không còn ở local
+
+      - name: Copy file to var/www/html
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SERVER_AWS_SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script: |
+            echo "Moving files to /var/www/html ..."
+            sudo rm -rf /var/www/html/my-cv
+            sudo cp -r /home/ubuntu/apps/my-cv/dist /var/www/html/my-cv
+
+            sudo systemctl restart nginx
+            echo "Files moved successfully."
