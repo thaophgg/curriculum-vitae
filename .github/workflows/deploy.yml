@@ -33,12 +33,12 @@ jobs:
     - name: Build project # Build dự án
       run: npm run build # Chạy lệnh build
       
-    - name: Upload build artifacts # Tải file build lên để dùng cho job sau
-      uses: actions/upload-artifact@v4 # Sử dụng action upload-artifact
-      with:
-        name: dist # Tên của artifact
-        path: dist/ # Đường dẫn thư mục dist
-        retention-days: 7 # Giữ artifact trong 7 ngày
+    # - name: Upload build artifacts # Tải file build lên để dùng cho job sau
+    #   uses: actions/upload-artifact@v4 # Sử dụng action upload-artifact
+    #   with:
+    #     name: dist # Tên của artifact
+    #     path: dist/ # Đường dẫn thư mục dist
+    #     retention-days: 7 # Giữ artifact trong 7 ngày
 
   # Job 2: Deploy lên GitHub Pages
   deploy:
