@@ -40,7 +40,7 @@ jobs:
           key: ${{ secrets.SERVER_AWS_SSH_KEY }}    # private key của user trên server
           port: ${{ secrets.SSH_PORT || '22' }}
           source: "./dist"                          # copy toàn bộ (trừ .git)
-          target: ${{REMOTE_DIR}}     # đường dẫn đích trên server
+          target: ${{ env.REMOTE_DIR }}     # đường dẫn đích trên server
           strip_components: 0
           overwrite: true
           rm: true                               # xóa file cũ trên server nếu không còn ở local
