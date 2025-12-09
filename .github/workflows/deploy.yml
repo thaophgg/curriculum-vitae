@@ -55,7 +55,7 @@ jobs:
           script: |
             echo "Moving files to /var/www/html ..."
             sudo rm -rf /var/www/html/my-cv
-            sudo cp -r /home/ubuntu/apps/my-cv/dist /var/www/html/my-cv
+            sudo cp -r /home/ubuntu/my-cv/dist /var/www/html/my-cv
 
             sudo systemctl restart nginx
             echo "Files moved successfully."
