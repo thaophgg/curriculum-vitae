@@ -18,7 +18,6 @@ jobs:
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_AWS_SSH_KEY }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
-          REMOTE_DIR: /home/ubuntu/my-cv  # Thay đổi đường dẫn này theo server của bạn
         run: |
           echo "Bắt đầu deploy lên $SSH_HOST ..."
           echo "SSH Host: $SSH_HOST"
@@ -33,6 +32,8 @@ jobs:
 
       - name: Copy files to server via SSH (rsync)
         uses: appleboy/scp-action@v0.1.7
+        env: 
+          REMOTE_DIR: /home/ubuntu/my-cv  # Thay đổi đường dẫn này theo server của bạn
         with:
           host: ${{ secrets.SSH_HOST }}          # ví dụ: 123.45.67.89 hoặc tippibui.com
           username: ${{ secrets.SSH_USERNAME }}  # thường là: root hoặc deploy
