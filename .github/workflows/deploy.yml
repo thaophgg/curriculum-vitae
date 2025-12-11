@@ -1,61 +1,61 @@
-name: Deploy to Server
+# name: Deploy to Server
 
-on:
-  push:
-    branches: [ main ]        # push lên main thì deploy
-  workflow_dispatch:          # cho phép chạy tay từ tab Actions
+# on:
+#   push:
+#     branches: [ main ]        # push lên main thì deploy
+#   workflow_dispatch:          # cho phép chạy tay từ tab Actions
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # Lấy code từ repo, câu lệnh của github action
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4 # Lấy code từ repo, câu lệnh của github action
 
-      - name: Build
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-          SSH_PRIVATE_KEY: ${{ secrets.SERVER_AWS_SSH_KEY }}
-          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
-        run: |
-          echo "Bắt đầu deploy lên $SSH_HOST ..."
-          echo "SSH Host: $SSH_HOST"
-          echo "SSH Username: $SSH_USERNAME"
-          echo "SSH Port: $SSH_PORT"
-          echo "Remote Directory: $REMOTE_DIR"
+#       - name: Build
+#         env:
+#           SSH_HOST: ${{ secrets.SSH_HOST }}
+#           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+#           SSH_PRIVATE_KEY: ${{ secrets.SERVER_AWS_SSH_KEY }}
+#           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+#         run: |
+#           echo "Bắt đầu deploy lên $SSH_HOST ..."
+#           echo "SSH Host: $SSH_HOST"
+#           echo "SSH Username: $SSH_USERNAME"
+#           echo "SSH Port: $SSH_PORT"
+#           echo "Remote Directory: $REMOTE_DIR"
           
-          npm install
-          npm run build 
+#           npm install
+#           npm run build 
 
-          echo "Deploy thành công lên https://$SSH_HOST"
+#           echo "Deploy thành công lên https://$SSH_HOST"
 
-      - name: Copy files to server via SSH (rsync)
-        uses: appleboy/scp-action@v0.1.7
-        env: 
-          REMOTE_DIR: /home/ubuntu/my-cv  # Thay đổi đường dẫn này theo server của bạn
-        with:
-          host: ${{ secrets.SSH_HOST }}          # ví dụ: 123.45.67.89 hoặc tippibui.com
-          username: ${{ secrets.SSH_USERNAME }}  # thường là: root hoặc deploy
-          key: ${{ secrets.SERVER_AWS_SSH_KEY }}    # private key của user trên server
-          port: ${{ secrets.SSH_PORT || '22' }}
-          source: "./dist"                          # copy toàn bộ (trừ .git)
-          target: ${{ env.REMOTE_DIR }}     # đường dẫn đích trên server
-          strip_components: 0
-          overwrite: true
-          rm: true                               # xóa file cũ trên server nếu không còn ở local
+#       - name: Copy files to server via SSH (rsync)
+#         uses: appleboy/scp-action@v0.1.7
+#         env: 
+#           REMOTE_DIR: /home/ubuntu/my-cv  # Thay đổi đường dẫn này theo server của bạn
+#         with:
+#           host: ${{ secrets.SSH_HOST }}          # ví dụ: 123.45.67.89 hoặc tippibui.com
+#           username: ${{ secrets.SSH_USERNAME }}  # thường là: root hoặc deploy
+#           key: ${{ secrets.SERVER_AWS_SSH_KEY }}    # private key của user trên server
+#           port: ${{ secrets.SSH_PORT || '22' }}
+#           source: "./dist"                          # copy toàn bộ (trừ .git)
+#           target: ${{ env.REMOTE_DIR }}     # đường dẫn đích trên server
+#           strip_components: 0
+#           overwrite: true
+#           rm: true                               # xóa file cũ trên server nếu không còn ở local
 
-      - name: Copy file to var/www/html
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SERVER_AWS_SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || '22' }}
-          script: |
-            echo "Moving files to /var/www/html ..."
-            sudo rm -rf /var/www/html/my-cv
-            sudo cp -r /home/ubuntu/my-cv/dist /var/www/html/my-cv
+#       - name: Copy file to var/www/html
+#         uses: appleboy/ssh-action@v0.1.7
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USERNAME }}
+#           key: ${{ secrets.SERVER_AWS_SSH_KEY }}
+#           port: ${{ secrets.SSH_PORT || '22' }}
+#           script: |
+#             echo "Moving files to /var/www/html ..."
+#             sudo rm -rf /var/www/html/my-cv
+#             sudo cp -r /home/ubuntu/my-cv/dist /var/www/html/my-cv
 
-            sudo systemctl restart nginx
-            echo "Files moved successfully."
+#             sudo systemctl restart nginx
+#             echo "Files moved successfully."
