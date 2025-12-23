@@ -8,7 +8,7 @@ const Template1 = () => {
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-red-600 rounded-full"></div>
         <div className="relative flex flex-col md:flex-row items-center justify-between px-12 pt-24 pb-16">
           <div className="mt-8 md:mt-0 text-center md:text-left max-w-lg">
-            <h1 className="text-6xl font-black leading-none">En Temp1</h1>
+            <h1 className="text-6xl font-black leading-none">En Temp1 test ci</h1>
             <p className="text-3xl text-red-600 font-light mt-4">ULTRICIES TURPIS AC PROIN ULLAMCORPER</p>
             <p className="mt-8 text-gray-700 text-sm leading-relaxed">
               Arcu magnis conubia mattis nunc eros dapibus erat leo maximus urna cras montes
