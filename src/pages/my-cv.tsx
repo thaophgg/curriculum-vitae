@@ -25,7 +25,20 @@ const TEMPLATES = {
     '2': <Template2En />,
     '3': <Template3En />,
   },
-} as const;
+};
+
+const TABNAMES = {
+  vi: {
+    '1': 'Mẫu 1',
+    '2': 'Mẫu 2',
+    '3': 'Mẫu 3',
+  },
+  en: {
+    '1': 'Template 1',
+    '2': 'Template 2',
+    '3': 'Template 3',
+  },
+}
 
 const wrap = (component: React.ReactElement) => widthSuspense(component);
 
@@ -42,17 +55,17 @@ const MyCv = () => {
   const items: TabsProps['items'] = [
     {
       key: '1',
-      label: 'Template 1',
+      label: TABNAMES[language]['1'],
       children: wrap(TEMPLATES[language]['1']),
     },
     {
       key: '2',
-      label: 'Template 2',
+      label: TABNAMES[language]['2'],
       children: wrap(TEMPLATES[language]['2']),
     },
     {
       key: '3',
-      label: 'Template 3',
+      label: TABNAMES[language]['3'],
       children: wrap(TEMPLATES[language]['3']),
     },
   ];
